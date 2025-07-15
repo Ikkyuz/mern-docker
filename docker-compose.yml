@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # Service ของ backend (NodeJS/Express)
+  backend:
+    container_name: mern-backend
+    build: ./backend # สร้าง Image จาก Dockerfile ใน backend
+    ports:
+      - 5000:5000 # Map port 5000 ของเครื่องเรากับ port 5000 ของ container
+    volumes:
+      - ./backend:/app # Mount โฟลเดอร์ backend ของเราเข้าไปใน /app ของ container
+      - /app/node_modules # ไม่ mount node_modules เพื่อใช้ที่ติดตั้งใน container
+    env_file:
+      - ./backend/.env # อ่านค่า Environment Variable จากไฟล์ .env
+    depends_on:
+      - mongo # ให้รอจนกว่า service 'mongo' จะพร้อมใช้งาน
+
+  # Service ของ frontend (ReactJS)
+  frontend:
+    container_name: mern-frontend
+    build: ./frontend # สร้าง Image จาก Dockerfile ใน frontend
+    ports:
+      - 5173:5173 # Map port 3000 ของเครื่องเรากับ port 5173 ของ container
+    volumes:
+      - ./frontend:/app # Mount โฟลเดอร์ frontend เพื่อให้ Hot-reload ทำงาน
+      - /app/node_modules
+    depends_on:
+      - backend # รอให้ backend พร้อมทำงานก่อน
+
+  # Service ของ MongoDB
+  mongo:
+    container_name: mern-mongo
+    image: mongo:latest # ใช้ Official image ของ MongoDB
+    ports:
+      - 27017:27017 # Map port 27017 (default ของ MongoDB)
+    volumes:
+      - mongo-data:/data/db # สร้าง Volume ชื่อ mongo-data เพื่อเก็บข้อมูลของ MongoDB
+
+# กำหนด Volume ที่จะใช้
+volumes:
+  mongo-data:
